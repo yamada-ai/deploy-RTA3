@@ -1,0 +1,41 @@
+services:
+  tomcat:
+    build: ./tomcat
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./tomcat/bbs.war:/usr/local/apache-tomcat-10.1.24/webapps/bbs.war 
+      - ./tomcat/logs:/usr/local/apache-tomcat-10.1.24/logs
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/student
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    networks:
+      - app-network
+
+  apache:
+    build:
+      context: ./apache
+    ports:
+      - "80:80"
+    depends_on:
+      - tomcat
+      
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: student
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
